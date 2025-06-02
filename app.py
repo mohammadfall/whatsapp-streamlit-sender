@@ -50,8 +50,8 @@ df_filtered = df[
 # ✅ عرض عدد الطلاب
 st.markdown(f"👥 عدد الطلاب: **{len(df_filtered)}** لم يتم إرسال الرسائل لهم نهائيًا")
 
-# ✅ معاينة الرسائل
-st.markdown("### 👀 المعاينة:")
+# ✅ معاينة الرسائل على شكل جدول
+preview_data = []
 for _, row in df_filtered.iterrows():
     try:
         message = msg_template.format(**row)
@@ -59,7 +59,15 @@ for _, row in df_filtered.iterrows():
         st.error(f"⚠️ يوجد متغير غير موجود في الرسالة: {e}")
         break
     number = format_phone_number(row["الرقم"])
-    st.text(f"{number} ← {message}")
+    preview_data.append({
+        "📞 الرقم": number,
+        "👤 الاسم": row["الاسم"],
+        "📨 الرسالة": message
+    })
+
+if preview_data:
+    st.markdown("### 👀 المعاينة:")
+    st.dataframe(pd.DataFrame(preview_data), use_container_width=True)
 
 # ✅ زر الإرسال
 if st.button("🚀 إرسال الرسائل"):
@@ -78,7 +86,11 @@ if st.button("🚀 إرسال الرسائل"):
             continue
 
         timestamp = datetime.now().isoformat()
-        send_log.append_row([selected_sheet, name, number, message, timestamp, "done"])
+        send_log.append_row([selected_sheet, name, number, message, timestamp, "pending"])
         worksheet.update_cell(i + 2, 3, "✅ تم الإرسال")
 
     st.success("✅ تم تجهيز الرسائل وتحديث حالة الإرسال في الشيت.")
+
+# ✅ توقيع الحقوق أسفل الصفحة
+st.markdown("---")
+st.caption("🛡️ تم تطوير هذا النظام بواسطة د. محمد العمري - جميع الحقوق محفوظة")
