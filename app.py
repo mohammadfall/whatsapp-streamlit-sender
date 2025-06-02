@@ -33,7 +33,12 @@ sheet_names = [ws.title for ws in worksheet_list if ws.title != "send_log"]
 st.set_page_config(page_title="إرسال واتساب للطلاب", layout="centered")
 st.title("📤 إرسال رسالة واتساب للطلاب")
 selected_sheet = st.selectbox("📄 اختر الشيت", sheet_names)
-msg_template = st.text_area("✍️ اكتب الرسالة (مثلاً: مرحبًا {الاسم}، تم رفع المحاضرة على المنصة)")
+
+# ✅ الرسالة الافتراضية المخصصة
+default_message = """السلام عليكم ورحمة الله كيفك {الاسم} 🤍
+
+تم رفع المحاضره عالمنصه ✅"""
+msg_template = st.text_area("✍️ اكتب الرسالة", value=default_message)
 
 # ✅ تحميل بيانات الطلاب
 worksheet = sheet.worksheet(selected_sheet)
