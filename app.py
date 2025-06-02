@@ -86,7 +86,7 @@ if st.button("🚀 إرسال الرسائل"):
             continue
 
         timestamp = datetime.now().isoformat()
-        send_log.append_row([selected_sheet, name, number, message, timestamp, "pending"])
+        send_log.append_row([selected_sheet, name, number, message, "pending", timestamp])
         worksheet.update_cell(i + 2, 3, "✅ تم الإرسال")
 
     st.success("✅ تم تجهيز الرسائل وتحديث حالة الإرسال في الشيت.")
