@@ -40,20 +40,13 @@ default_message = """السلام عليكم ورحمة الله كيفك {ال�
 تم رفع المحاضره عالمنصه ✅"""
 msg_template = st.text_area("✍️ اكتب الرسالة", value=default_message)
 
-# ✅ تحميل بيانات الطلاب
+# ✅ تحميل بيانات الطلاب بدون فلترة
 worksheet = sheet.worksheet(selected_sheet)
 df = pd.DataFrame(worksheet.get_all_records())
-
-# ✅ تصفية الطلاب الذين لم يتم إرسال الرسائل لهم نهائيًا
-exclude_keywords = ["تم", "done", "✅", "🚀", "sent", "yes", "إرسال"]
-df_filtered = df[
-    ~df["تم الارسال؟"].astype(str).str.strip().str.lower().apply(
-        lambda val: any(keyword in val for keyword in exclude_keywords)
-    )
-]
+df_filtered = df  # بدون أي فلترة
 
 # ✅ عرض عدد الطلاب
-st.markdown(f"👥 عدد الطلاب: **{len(df_filtered)}** لم يتم إرسال الرسائل لهم نهائيًا")
+st.markdown(f"👥 عدد الطلاب: **{len(df_filtered)}** سيتم إرسال الرسائل لهم")
 
 # ✅ معاينة الرسائل على شكل جدول
 preview_data = []
@@ -86,15 +79,15 @@ if st.button("🚀 إرسال الرسائل"):
         number = format_phone_number(phone_raw)
         message = msg_template.format(**row)
         key = number + selected_sheet
+        timestamp = datetime.now().isoformat()
 
         if key in existing_keys:
             continue
 
-        timestamp = datetime.now().isoformat()
         send_log.append_row([selected_sheet, name, number, message, "pending", timestamp])
-        worksheet.update_cell(i + 2, 3, "✅ تم الإرسال")
+        worksheet.update_cell(i + 2, 3, timestamp)  # 🕒 استبدال "تم الإرسال" بتوقيت الإرسال
 
-    st.success("✅ تم تجهيز الرسائل وتحديث حالة الإرسال في الشيت.")
+    st.success("✅ تم تجهيز الرسائل وتحديث وقت الإرسال في الشيت.")
 
 # ✅ توقيع الحقوق أسفل الصفحة
 st.markdown("---")
