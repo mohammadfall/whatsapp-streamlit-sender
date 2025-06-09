@@ -18,10 +18,10 @@ def format_phone_number(number):
         return "962" + number[1:]
     return number
 
-# ✅ إعداد الاتصال بـ Google Sheets
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+# ✅ إعداد الاتصال بـ Google Sheets باستخدام google-auth
+scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 service_info = json.loads(st.secrets["GOOGLE_SERVICE_ACCOUNT"])
-creds = ServiceAccountCredentials.from_json_keyfile_dict(service_info, scope)
+creds = Credentials.from_service_account_info(service_info, scopes=scope)
 client = gspread.authorize(creds)
 
 # ✅ فتح Google Sheet
