@@ -1,4 +1,8 @@
 import os
+print("🔎 raw_key value:\n", os.environ.get("GOOGLE_SERVICE_ACCOUNT", "❌ MISSING"))
+raw_key = os.environ["GOOGLE_SERVICE_ACCOUNT"].replace('\\n', '\n')
+print("✅ After replace:\n", raw_key)
+service_info = json.loads(raw_key)
 import streamlit as st
 import pandas as pd
 import json
