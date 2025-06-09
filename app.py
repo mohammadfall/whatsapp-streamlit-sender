@@ -15,9 +15,6 @@ raw_key = os.environ.get("GOOGLE_SERVICE_ACCOUNT", "").strip()
 if raw_key.startswith("="):
     raw_key = raw_key[1:].strip()
 
-# ✅ استبدال \\n بـ \n لتحويل المفتاح إلى شكل صحيح
-raw_key = raw_key.replace('\\n', '\n')
-
 # ✅ محاولة فك JSON مع معالجة الخطأ
 try:
     service_info = json.loads(raw_key)
