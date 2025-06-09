@@ -4,7 +4,7 @@ import pandas as pd
 import json
 from datetime import datetime
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
 # ✅ دالة تنسيق الرقم
 def format_phone_number(number):
