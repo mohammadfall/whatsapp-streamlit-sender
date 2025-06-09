@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import json
@@ -20,7 +21,7 @@ def format_phone_number(number):
 
 # ✅ إعداد الاتصال بـ Google Sheets باستخدام google-auth
 scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-service_info = json.loads(st.secrets["GOOGLE_SERVICE_ACCOUNT"])
+service_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT"])
 creds = Credentials.from_service_account_info(service_info, scopes=scope)
 client = gspread.authorize(creds)
 
