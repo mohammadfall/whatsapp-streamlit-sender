@@ -21,7 +21,8 @@ def format_phone_number(number):
 
 # ✅ إعداد الاتصال بـ Google Sheets باستخدام google-auth
 scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-service_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT"])
+raw_key = os.environ["GOOGLE_SERVICE_ACCOUNT"].replace('\\n', '\n')
+service_info = json.loads(raw_key)
 creds = Credentials.from_service_account_info(service_info, scopes=scope)
 client = gspread.authorize(creds)
 
