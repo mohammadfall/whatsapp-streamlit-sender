@@ -1,15 +1,32 @@
 import json
 import os
-print("🔎 raw_key value:\n", os.environ.get("GOOGLE_SERVICE_ACCOUNT", "❌ MISSING"))
-raw_key = os.environ["GOOGLE_SERVICE_ACCOUNT"].replace('\\n', '\n')
-print("✅ After replace:\n", raw_key)
-service_info = json.loads(raw_key)
 import streamlit as st
 import pandas as pd
-import json
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
+
+# ✅ طباعة قيمة المتغير الخام
+raw_key = os.environ.get("GOOGLE_SERVICE_ACCOUNT", "").strip()
+print("🔎 raw_key value:\n", raw_key[:200], "...")  # فقط أول 200 حرف للعرض
+
+# ✅ معالجة الأخطاء الشائعة
+if raw_key.startswith("="):
+    raw_key = raw_key[1:].strip()
+
+# ✅ استبدال \\n بأسطر فعلية
+raw_key = raw_key.replace('\\n', '\n')
+
+try:
+    service_info = json.loads(raw_key)
+except json.JSONDecodeError as e:
+    st.error("❌ خطأ في تحميل GOOGLE_SERVICE_ACCOUNT.\nتأكد من أن المفتاح محفوظ بصيغة JSON صحيحة.")
+    st.stop()
+
+# ✅ إعداد الاتصال بـ Google Sheets
+scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+creds = Credentials.from_service_account_info(service_info, scopes=scope)
+client = gspread.authorize(creds)
 
 # ✅ دالة تنسيق الرقم
 def format_phone_number(number):
@@ -23,13 +40,6 @@ def format_phone_number(number):
     if len(number) == 10 and number.startswith("07"):
         return "962" + number[1:]
     return number
-
-# ✅ إعداد الاتصال بـ Google Sheets باستخدام google-auth
-scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-raw_key = os.environ["GOOGLE_SERVICE_ACCOUNT"].replace('\\n', '\n')
-service_info = json.loads(raw_key)
-creds = Credentials.from_service_account_info(service_info, scopes=scope)
-client = gspread.authorize(creds)
 
 # ✅ فتح Google Sheet
 sheet = client.open_by_key("1gin23ojAkaWviu7zy5wVqMqR2kX1xQDTz2EkQsepdQo")
