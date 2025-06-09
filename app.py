@@ -1,30 +1,10 @@
-import json
-import os
+
 import streamlit as st
 import pandas as pd
+import json
 from datetime import datetime
 import gspread
-from google.oauth2.service_account import Credentials
-
-# ✅ طباعة المفتاح لأول 300 حرف (لأغراض التحقق فقط)
-raw_key = os.environ.get("GOOGLE_SERVICE_ACCOUNT", "❌ لم يتم تحميل المتغير").strip()
-print("🔍 RAW_KEY (أول 300 حرف):\n", raw_key[:300])
-
-# ✅ تنظيف البداية إذا فيها "="
-if raw_key.startswith("="):
-    raw_key = raw_key[1:].strip()
-
-# ✅ محاولة فك JSON مع معالجة الخطأ
-try:
-    service_info = json.loads(raw_key)
-except json.JSONDecodeError as e:
-    st.error("❌ خطأ في تحميل GOOGLE_SERVICE_ACCOUNT. تأكد من أن المفتاح محفوظ بصيغة JSON صحيحة كسطر واحد.")
-    st.stop()
-
-# ✅ إعداد الاتصال بـ Google Sheets
-scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-creds = Credentials.from_service_account_info(service_info, scopes=scope)
-client = gspread.authorize(creds)
+from oauth2client.service_account import ServiceAccountCredentials
 
 # ✅ دالة تنسيق الرقم
 def format_phone_number(number):
@@ -38,6 +18,12 @@ def format_phone_number(number):
     if len(number) == 10 and number.startswith("07"):
         return "962" + number[1:]
     return number
+
+# ✅ إعداد الاتصال بـ Google Sheets
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+service_info = json.loads(st.secrets["GOOGLE_SERVICE_ACCOUNT"])
+creds = ServiceAccountCredentials.from_json_keyfile_dict(service_info, scope)
+client = gspread.authorize(creds)
 
 # ✅ فتح Google Sheet
 sheet = client.open_by_key("1gin23ojAkaWviu7zy5wVqMqR2kX1xQDTz2EkQsepdQo")
@@ -61,7 +47,7 @@ preset_messages = {
 selected_option = st.selectbox("اختر رسالة جاهزة أو اكتب واحدة مخصصة:", list(preset_messages.keys()))
 msg_template = st.text_area("✍️ اكتب أو عدل على الرسالة:", value=preset_messages[selected_option])
 
-# ✅ تحميل بيانات الطلاب
+# ✅ تحميل بيانات الطلاب بدون فلترة
 worksheet = sheet.worksheet(selected_sheet)
 df = pd.DataFrame(worksheet.get_all_records())
 df_filtered = df
@@ -69,7 +55,7 @@ df_filtered = df
 # ✅ عرض عدد الطلاب
 st.markdown(f"👥 عدد الطلاب: **{len(df_filtered)}** سيتم إرسال الرسائل لهم")
 
-# ✅ معاينة الرسائل
+# ✅ معاينة الرسائل على شكل جدول
 preview_data = []
 for _, row in df_filtered.iterrows():
     try:
@@ -106,10 +92,10 @@ if st.button("🚀 إرسال الرسائل"):
             continue
 
         send_log.append_row([selected_sheet, name, number, message, "pending", timestamp])
-        worksheet.update_cell(i + 2, 3, timestamp)
+        worksheet.update_cell(i + 2, 3, timestamp)  # 🕒 استبدال "تم الإرسال" بتوقيت الإرسال
 
     st.success("✅ تم تجهيز الرسائل وتحديث وقت الإرسال في الشيت.")
 
-# ✅ التوقيع
+# ✅ توقيع الحقوق أسفل الصفحة
 st.markdown("---")
 st.caption("🛡️ تم تطوير هذا النظام بواسطة د. محمد العمري - جميع الحقوق محفوظة")
