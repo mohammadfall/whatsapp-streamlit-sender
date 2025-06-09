@@ -1,10 +1,9 @@
-
 import streamlit as st
 import pandas as pd
 import json
 from datetime import datetime
 import gspread
-from google.oauth2.service_account import Credentials
+from google.oauth2.service_account import Credentials  # ✅ التعديل هنا
 
 # ✅ دالة تنسيق الرقم
 def format_phone_number(number):
@@ -22,7 +21,7 @@ def format_phone_number(number):
 # ✅ إعداد الاتصال بـ Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 service_info = json.loads(st.secrets["GOOGLE_SERVICE_ACCOUNT"])
-creds = ServiceAccountCredentials.from_json_keyfile_dict(service_info, scope)
+creds = Credentials.from_service_account_info(service_info, scopes=scope)  # ✅ التعديل هنا
 client = gspread.authorize(creds)
 
 # ✅ فتح Google Sheet
