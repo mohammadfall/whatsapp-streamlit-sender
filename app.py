@@ -1,5 +1,7 @@
 import json
 import os
+raw_key = os.environ.get("GOOGLE_SERVICE_ACCOUNT", "❌ لم يتم تحميل المتغير")
+print("🔍 RAW_KEY (أول 300 حرف):\n", raw_key[:300])
 import streamlit as st
 import pandas as pd
 from datetime import datetime
