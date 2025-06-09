@@ -6,21 +6,21 @@ from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-# ✅ طباعة قيمة المتغير الخام
+# ✅ تحميل مفتاح الخدمة من متغير البيئة (Railway)
 raw_key = os.environ.get("GOOGLE_SERVICE_ACCOUNT", "").strip()
-print("🔎 raw_key value:\n", raw_key[:200], "...")  # فقط أول 200 حرف للعرض
 
-# ✅ معالجة الأخطاء الشائعة
+# ✅ تنظيف البداية إذا فيها "="
 if raw_key.startswith("="):
     raw_key = raw_key[1:].strip()
 
-# ✅ استبدال \\n بأسطر فعلية
+# ✅ استبدال \\n بـ \n لتحويل المفتاح إلى شكل صحيح
 raw_key = raw_key.replace('\\n', '\n')
 
+# ✅ محاولة فك JSON مع معالجة الخطأ
 try:
     service_info = json.loads(raw_key)
-except json.JSONDecodeError as e:
-    st.error("❌ خطأ في تحميل GOOGLE_SERVICE_ACCOUNT.\nتأكد من أن المفتاح محفوظ بصيغة JSON صحيحة.")
+except json.JSONDecodeError:
+    st.error("❌ خطأ في تحميل GOOGLE_SERVICE_ACCOUNT. تأكد من أن المفتاح محفوظ بصيغة JSON صحيحة كسطر واحد.")
     st.stop()
 
 # ✅ إعداد الاتصال بـ Google Sheets
@@ -63,7 +63,7 @@ preset_messages = {
 selected_option = st.selectbox("اختر رسالة جاهزة أو اكتب واحدة مخصصة:", list(preset_messages.keys()))
 msg_template = st.text_area("✍️ اكتب أو عدل على الرسالة:", value=preset_messages[selected_option])
 
-# ✅ تحميل بيانات الطلاب بدون فلترة
+# ✅ تحميل بيانات الطلاب
 worksheet = sheet.worksheet(selected_sheet)
 df = pd.DataFrame(worksheet.get_all_records())
 df_filtered = df
@@ -71,7 +71,7 @@ df_filtered = df
 # ✅ عرض عدد الطلاب
 st.markdown(f"👥 عدد الطلاب: **{len(df_filtered)}** سيتم إرسال الرسائل لهم")
 
-# ✅ معاينة الرسائل على شكل جدول
+# ✅ معاينة الرسائل
 preview_data = []
 for _, row in df_filtered.iterrows():
     try:
@@ -108,10 +108,10 @@ if st.button("🚀 إرسال الرسائل"):
             continue
 
         send_log.append_row([selected_sheet, name, number, message, "pending", timestamp])
-        worksheet.update_cell(i + 2, 3, timestamp)  # 🕒 استبدال "تم الإرسال" بتوقيت الإرسال
+        worksheet.update_cell(i + 2, 3, timestamp)
 
     st.success("✅ تم تجهيز الرسائل وتحديث وقت الإرسال في الشيت.")
 
-# ✅ توقيع الحقوق أسفل الصفحة
+# ✅ التوقيع
 st.markdown("---")
 st.caption("🛡️ تم تطوير هذا النظام بواسطة د. محمد العمري - جميع الحقوق محفوظة")
