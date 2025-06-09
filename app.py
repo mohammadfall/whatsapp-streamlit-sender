@@ -1,15 +1,14 @@
 import json
 import os
-raw_key = os.environ.get("GOOGLE_SERVICE_ACCOUNT", "❌ لم يتم تحميل المتغير")
-print("🔍 RAW_KEY (أول 300 حرف):\n", raw_key[:300])
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-# ✅ تحميل مفتاح الخدمة من متغير البيئة (Railway)
-raw_key = os.environ.get("GOOGLE_SERVICE_ACCOUNT", "").strip()
+# ✅ طباعة المفتاح لأول 300 حرف (لأغراض التحقق فقط)
+raw_key = os.environ.get("GOOGLE_SERVICE_ACCOUNT", "❌ لم يتم تحميل المتغير").strip()
+print("🔍 RAW_KEY (أول 300 حرف):\n", raw_key[:300])
 
 # ✅ تنظيف البداية إذا فيها "="
 if raw_key.startswith("="):
@@ -18,7 +17,7 @@ if raw_key.startswith("="):
 # ✅ محاولة فك JSON مع معالجة الخطأ
 try:
     service_info = json.loads(raw_key)
-except json.JSONDecodeError:
+except json.JSONDecodeError as e:
     st.error("❌ خطأ في تحميل GOOGLE_SERVICE_ACCOUNT. تأكد من أن المفتاح محفوظ بصيغة JSON صحيحة كسطر واحد.")
     st.stop()
 
