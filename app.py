@@ -51,6 +51,9 @@ if selected_option == "📝 أكتب الرسالة يدويًا":
 else:
     msg_template = st.text_area("✍️ اكتب أو عدل على الرسالة:", value=preset_messages[selected_option])
 
+# ✅ إضافة الجملة الثابتة في نهاية الرسالة
+msg_template += "\n\n👇 يرجى تأكيد استلام الرسالة بالرد بـ \"تم\" أو \"ما وصل\""
+
 # ✅ تحميل بيانات الطلاب
 worksheet = sheet.worksheet(selected_sheet)
 df = pd.DataFrame(worksheet.get_all_records())
@@ -69,11 +72,10 @@ for _, row in df_filtered.iterrows():
     name = row.get("الاسم", "").strip()
     if not name:
         name = "صديقي"
-        row["الاسم"] = name  # للتضمين في الرسالة
+        row["الاسم"] = name
 
     try:
         message = msg_template.format(**row)
-        message += "\n\n👇 يرجى تأكيد استلام الرسالة بالرد بـ \"تم\" أو \"ما وصل\""
     except KeyError as e:
         st.error(f"⚠️ يوجد متغير غير موجود في الرسالة: {e}")
         st.stop()
@@ -108,7 +110,6 @@ if st.button("🚀 إرسال الرسائل"):
         number = format_phone_number(phone_raw)
         try:
             message = msg_template.format(**row)
-            message += "\n\n👇 يرجى تأكيد استلام الرسالة بالرد بـ \"تم\" أو \"ما وصل\""
         except KeyError:
             continue
 
