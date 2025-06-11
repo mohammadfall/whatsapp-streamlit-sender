@@ -73,6 +73,7 @@ for _, row in df_filtered.iterrows():
 
     try:
         message = msg_template.format(**row)
+        message += "\n\n👇 يرجى تأكيد استلام الرسالة بالرد بـ \"تم\" أو \"ما وصل\""
     except KeyError as e:
         st.error(f"⚠️ يوجد متغير غير موجود في الرسالة: {e}")
         st.stop()
@@ -107,6 +108,7 @@ if st.button("🚀 إرسال الرسائل"):
         number = format_phone_number(phone_raw)
         try:
             message = msg_template.format(**row)
+            message += "\n\n👇 يرجى تأكيد استلام الرسالة بالرد بـ \"تم\" أو \"ما وصل\""
         except KeyError:
             continue
 
