@@ -3,7 +3,7 @@ import pandas as pd
 import json
 from datetime import datetime
 import gspread
-from google.oauth2.service_account import Credentials  # ✅ التعديل هنا
+from google.oauth2.service_account import Credentials
 
 # ✅ دالة تنسيق الرقم
 def format_phone_number(number):
@@ -21,7 +21,7 @@ def format_phone_number(number):
 # ✅ إعداد الاتصال بـ Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 service_info = json.loads(st.secrets["GOOGLE_SERVICE_ACCOUNT"])
-creds = Credentials.from_service_account_info(service_info, scopes=scope)  # ✅ التعديل هنا
+creds = Credentials.from_service_account_info(service_info, scopes=scope)
 client = gspread.authorize(creds)
 
 # ✅ فتح Google Sheet
@@ -44,9 +44,14 @@ preset_messages = {
 }
 
 selected_option = st.selectbox("اختر رسالة جاهزة أو اكتب واحدة مخصصة:", list(preset_messages.keys()))
-msg_template = st.text_area("✍️ اكتب أو عدل على الرسالة:", value=preset_messages[selected_option])
 
-# ✅ تحميل بيانات الطلاب بدون فلترة
+if selected_option == "📝 أكتب الرسالة يدويًا":
+    raw_input = st.text_area("✍️ اكتب أو عدل على الرسالة:", value="")
+    msg_template = f"السلام عليكم {{الاسم}}\n\n{raw_input}"
+else:
+    msg_template = st.text_area("✍️ اكتب أو عدل على الرسالة:", value=preset_messages[selected_option])
+
+# ✅ تحميل بيانات الطلاب
 worksheet = sheet.worksheet(selected_sheet)
 df = pd.DataFrame(worksheet.get_all_records())
 df_filtered = df
@@ -54,18 +59,28 @@ df_filtered = df
 # ✅ عرض عدد الطلاب
 st.markdown(f"👥 عدد الطلاب: **{len(df_filtered)}** سيتم إرسال الرسائل لهم")
 
-# ✅ معاينة الرسائل على شكل جدول
+# ✅ معاينة الرسائل
 preview_data = []
 for _, row in df_filtered.iterrows():
+    phone_raw = row.get("الرقم", "")
+    if not phone_raw:
+        continue
+
+    name = row.get("الاسم", "").strip()
+    if not name:
+        name = "صديقي"
+        row["الاسم"] = name  # للتضمين في الرسالة
+
     try:
         message = msg_template.format(**row)
     except KeyError as e:
         st.error(f"⚠️ يوجد متغير غير موجود في الرسالة: {e}")
-        break
-    number = format_phone_number(row["الرقم"])
+        st.stop()
+
+    number = format_phone_number(phone_raw)
     preview_data.append({
         "📞 الرقم": number,
-        "👤 الاسم": row["الاسم"],
+        "👤 الاسم": name,
         "📨 الرسالة": message
     })
 
@@ -80,10 +95,21 @@ if st.button("🚀 إرسال الرسائل"):
     existing_keys = [row[2] + row[1] for row in existing_logs[1:]]
 
     for i, row in df_filtered.iterrows():
-        name = row["الاسم"]
-        phone_raw = row["الرقم"]
+        phone_raw = row.get("الرقم", "")
+        if not phone_raw:
+            continue
+
+        name = row.get("الاسم", "").strip()
+        if not name:
+            name = "صديقي"
+            row["الاسم"] = name
+
         number = format_phone_number(phone_raw)
-        message = msg_template.format(**row)
+        try:
+            message = msg_template.format(**row)
+        except KeyError:
+            continue
+
         key = number + selected_sheet
         timestamp = datetime.now().isoformat()
 
@@ -91,7 +117,7 @@ if st.button("🚀 إرسال الرسائل"):
             continue
 
         send_log.append_row([selected_sheet, name, number, message, "pending", timestamp])
-        worksheet.update_cell(i + 2, 3, timestamp)  # 🕒 استبدال "تم الإرسال" بتوقيت الإرسال
+        worksheet.update_cell(i + 2, 3, timestamp)  # 🕒 تأكد أن العمود الثالث هو وقت الإرسال
 
     st.success("✅ تم تجهيز الرسائل وتحديث وقت الإرسال في الشيت.")
 
