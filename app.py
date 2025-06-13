@@ -62,7 +62,7 @@ df_filtered = df
 # ✅ عرض عدد الطلاب
 st.markdown(f"👥 عدد الطلاب: **{len(df_filtered)}** سيتم إرسال الرسائل لهم")
 
-# ✅ معاينة الرسائل
+# ✅ تحضير الرسائل
 preview_data = []
 for _, row in df_filtered.iterrows():
     phone_raw = row.get("الرقم", "")
@@ -87,42 +87,41 @@ for _, row in df_filtered.iterrows():
         "📨 الرسالة": message
     })
 
-if preview_data:
-    st.markdown("### 👀 المعاينة:")
-    st.dataframe(pd.DataFrame(preview_data), use_container_width=True)
+# ✅ تقسيم المعاينات إلى مجموعات من 30 طالب
+group_size = 30
+total_groups = (len(preview_data) + group_size - 1) // group_size
 
-# ✅ زر الإرسال
-if st.button("🚀 إرسال الرسائل"):
-    send_log = sheet.worksheet("send_log")
-    existing_logs = send_log.get_all_values()
-    existing_keys = [row[2] + row[1] for row in existing_logs[1:]]
+st.markdown("## 🚀 إرسال الرسائل حسب المجموعات")
+send_log = sheet.worksheet("send_log")
+existing_logs = send_log.get_all_values()
+existing_keys = [row[2] + row[1] for row in existing_logs[1:]]
 
-    for i, row in df_filtered.iterrows():
-        phone_raw = row.get("الرقم", "")
-        if not phone_raw:
-            continue
+for group_index in range(total_groups):
+    group_data = preview_data[group_index * group_size : (group_index + 1) * group_size]
 
-        name = row.get("الاسم", "").strip()
-        if not name:
-            name = "صديقي"
-            row["الاسم"] = name
+    with st.expander(f"📦 المجموعة {group_index + 1} ({len(group_data)} طالب)"):
+        st.dataframe(pd.DataFrame(group_data), use_container_width=True)
 
-        number = format_phone_number(phone_raw)
-        try:
-            message = msg_template.format(**row)
-        except KeyError:
-            continue
+        if st.button(f"📨 إرسال المجموعة {group_index + 1}"):
+            for row in group_data:
+                name = row["👤 الاسم"]
+                number = row["📞 الرقم"]
+                message = row["📨 الرسالة"]
 
-        key = number + selected_sheet
-        timestamp = datetime.now().isoformat()
+                key = number + selected_sheet
+                timestamp = datetime.now().isoformat()
 
-        if key in existing_keys:
-            continue
+                if key in existing_keys:
+                    continue
 
-        send_log.append_row([selected_sheet, name, number, message, "pending", timestamp])
-        worksheet.update_cell(i + 2, 3, timestamp)  # 🕒 تأكد أن العمود الثالث هو وقت الإرسال
+                send_log.append_row([selected_sheet, name, number, message, "pending", timestamp])
 
-    st.success("✅ تم تجهيز الرسائل وتحديث وقت الإرسال في الشيت.")
+                # تحديث وقت الإرسال في الـ worksheet الأصلي
+                for idx, df_row in df_filtered.iterrows():
+                    if format_phone_number(df_row.get("الرقم", "")) == number:
+                        worksheet.update_cell(idx + 2, 3, timestamp)
+
+            st.success(f"✅ تم إرسال المجموعة {group_index + 1}")
 
 # ✅ توقيع الحقوق أسفل الصفحة
 st.markdown("---")
